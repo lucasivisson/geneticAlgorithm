@@ -87,50 +87,21 @@ def crossover(chromosome1, chromosome2):
 # Realiza a operação de mutação em um cromossomo.
 # Escolhe aleatoriamente uma aresta no cromossomo e tenta trocar um de seus vértices por um vizinho não emparelhado.
 def mutation(chromosome, graph, max_attempts=10):
-    print('chromosoe', chromosome)
-    # cria uma copia do chromosome
+    # Cria uma cópia do cromossomo.
     mutated_chromosome = chromosome.copy()
-    # escolhe uma aresta aleatoria dele e busca seus vertices
-    mutated_edge_index = random.randint(0, len(mutated_chromosome) - 1)
-    vertex1, vertex2 = mutated_chromosome[mutated_edge_index]
 
-    # Cria uma lista de vizinhos não emparelhados do vertex1.
-    # Filtra os vizinhos com base no peso da aresta no grafo e se a aresta já está presente no cromossomo
-    non_paired_neighbors = [neighbor for neighbor in range(len(
-        graph)) if graph[vertex1][neighbor] > 0 and (neighbor, vertex1) not in mutated_chromosome]
+    # Escolhe aleatoriamente duas posições distintas no cromossomo.
+    position1, position2 = random.sample(range(len(mutated_chromosome)), 2)
 
-    # Verifica se existem vizinhos não emparelhados.
-    if non_paired_neighbors:
-        # Escolhe aleatoriamente um vizinho não emparelhado da lista de vizinhos não emparelhados.
-        vertex_to_unpair = random.choice(non_paired_neighbors)
-        # Atualiza a aresta escolhida no cromossomo para conectar vertex1 ao novo vizinho escolhido aleatoriamente.
-        mutated_chromosome[mutated_edge_index] = (vertex1, vertex_to_unpair)
-    else:
-        # Se não houver vizinhos não emparelhados, mantém a aresta existente, preservando o emparelhamento.
-        mutated_chromosome[mutated_edge_index] = (vertex1, vertex2)
+    # Obtém os vértices correspondentes às posições escolhidas.
+    vertex1a, vertex1b = mutated_chromosome[position1]
+    vertex2a, vertex2b = mutated_chromosome[position2]
 
-    # Inicializa o contador de tentativas para garantir que o loop de mutação não seja executado indefinidamente.
-    attempts = 0
-    # Inicia um loop que tenta realizar a mutação com um número máximo de tentativas (max_attempts).
-    while attempts < max_attempts:
-        # Escolhe aleatoriamente outro índice de aresta no cromossomo.
-        other_edge_index = random.randint(0, len(mutated_chromosome) - 1)
-        # Garante que o índice escolhido aleatoriamente não seja o mesmo da aresta original.
-        if other_edge_index != mutated_edge_index:
-            other_vertex1, other_vertex2 = mutated_chromosome[other_edge_index]
+    # Realiza a troca de vértices entre as arestas.
+    mutated_chromosome[position1] = (vertex1a, vertex2b)
+    mutated_chromosome[position2] = (vertex2a, vertex1b)
 
-            # Verifica se a troca proposta não gera arestas duplicadas no cromossomo e se a troca é possível no grafo original.
-            if (other_vertex2, vertex_to_unpair) not in mutated_chromosome and (vertex1, other_vertex2) not in mutated_chromosome and graph[other_vertex2][vertex_to_unpair] > 0:
-                # Realiza a troca nos vértices da aresta original.
-                mutated_chromosome[mutated_edge_index] = (
-                    vertex1, other_vertex2)
-                mutated_chromosome[other_edge_index] = (
-                    vertex_to_unpair, other_vertex1)
-                return mutated_chromosome
-
-        attempts += 1
-
-    return chromosome
+    return mutated_chromosome
 
 
 # Seleciona dois pais da população com base na probabilidade proporcional à sua aptidão.
