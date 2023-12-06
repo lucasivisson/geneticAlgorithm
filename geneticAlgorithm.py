@@ -1,4 +1,5 @@
 import random
+import time
 
 num_vertices = 12  # Número de vértices no grafo.
 graph = [
@@ -17,24 +18,40 @@ graph = [
 ]  # Matriz de adjacência representando o grafo completo ponderado.
 
 population_size = 100  # Tamanho da população na abordagem genética.
-generations = 100000  # Número máximo de gerações para o algoritmo genético.
+generations = 1000  # Número máximo de gerações para o algoritmo genético.
 # Um limite adicional para o número máximo de gerações.
 
 
 # Cria um cromossomo (solução) inicial de emparelhamento aleatório.
 def random_chromosome(graph):
     num_vertices = len(graph)
-    chromosome = [(0, 0)] * num_vertices
+    available_vertices = list(range(num_vertices))
+    chromosome = [(0, 0)] * int(num_vertices/2)
 
     # Itera sobre cada vértice e, para cada vértice, escolhe aleatoriamente um vizinho não emparelhado e forma um par.
-    for vertex in range(num_vertices):
-        non_paired_neighbors = [neighbor for neighbor in range(
-            num_vertices) if graph[vertex][neighbor] > 0 and chromosome[neighbor] == (0, 0)]
+    for index in range(int(num_vertices/2)):
+        if not available_vertices:
+            break
 
-        if non_paired_neighbors:
-            chosen_neighbor = random.choice(non_paired_neighbors)
-            chromosome[vertex] = (vertex, chosen_neighbor)
-            chromosome[chosen_neighbor] = (chosen_neighbor, vertex)
+        vertex = None
+        vertex_chosen = False
+        while vertex_chosen == False and vertex not in available_vertices:
+            vertex = random.choice(available_vertices)
+            if vertex in available_vertices:
+                vertex_chosen = True
+
+        available_vertices.remove(vertex)
+
+        another_vertex = None
+        another_vertex_chosen = False
+        while another_vertex_chosen == False and another_vertex not in available_vertices:
+            another_vertex = random.choice(available_vertices)
+            if (another_vertex in available_vertices):
+                another_vertex_chosen = True
+
+        available_vertices.remove(another_vertex)
+
+        chromosome[index] = (vertex, another_vertex)
 
     return chromosome
 
@@ -53,67 +70,109 @@ def fitness(chromosome):
     for edge in chromosome:
         vertex1, vertex2 = edge
         # Como o algoritmo busca um emparelhamento mínimo, o custo é negativo.
-        cost -= graph[vertex1][vertex2]
+        cost += graph[vertex1][vertex2]
 
-    return cost
+    return 1 / cost
 
 
 # Realiza a operação de cruzamento (crossover) entre dois cromossomos.
 def crossover(chromosome1, chromosome2):
-    # Um ponto de corte aleatório é escolhido, e partes dos pais são trocadas para formar dois novos cromossomos.
     point = random.randint(1, len(chromosome1) - 1)
     new_chromosome1 = chromosome1[:point] + chromosome2[point:]
     new_chromosome2 = chromosome2[:point] + chromosome1[point:]
 
+    new_chromosome1, new_chromosome2 = swap_repeated_vertices(
+        new_chromosome1, new_chromosome2)
+
     return new_chromosome1, new_chromosome2
+
+
+def swap_repeated_vertices(chromosome1, chromosome2):
+    repeated_vertices_1 = find_repeated_vertices(chromosome1)
+    repeated_vertices_2 = find_repeated_vertices(chromosome2)
+
+    for v1, v2 in zip(repeated_vertices_1, repeated_vertices_2):
+        swap_vertices(chromosome1, v1, chromosome2, v2)
+
+    # Após a troca, verifique novamente e resolva possíveis duplicatas
+    resolve_duplicate_vertices(chromosome1)
+    resolve_duplicate_vertices(chromosome2)
+
+    return chromosome1, chromosome2
+
+
+def find_repeated_vertices(chromosome):
+    visited_vertices = set()
+    repeated_vertices = []
+
+    for edge in chromosome:
+        for vertex in edge:
+            if vertex in visited_vertices:
+                repeated_vertices.append(vertex)
+            else:
+                visited_vertices.add(vertex)
+
+    return repeated_vertices
+
+
+def swap_vertices(chromosome, vertex1, other_chromosome, vertex2):
+    for i in range(len(chromosome)):
+        if chromosome[i][0] == vertex1:
+            chromosome[i] = (vertex2, chromosome[i][1])
+        elif chromosome[i][1] == vertex1:
+            chromosome[i] = (chromosome[i][0], vertex2)
+
+    for i in range(len(other_chromosome)):
+        if other_chromosome[i][0] == vertex2:
+            other_chromosome[i] = (vertex1, other_chromosome[i][1])
+        elif other_chromosome[i][1] == vertex2:
+            other_chromosome[i] = (other_chromosome[i][0], vertex1)
+
+
+def resolve_duplicate_vertices(chromosome):
+    vertex_count = {}
+    for edge in chromosome:
+        for vertex in edge:
+            if vertex in vertex_count:
+                vertex_count[vertex] += 1
+            else:
+                vertex_count[vertex] = 1
+
+    for i in range(len(chromosome)):
+        for j in range(2):
+            vertex = chromosome[i][j]
+            if vertex_count[vertex] > 1:
+                available_vertex = find_available_vertex(chromosome, vertex)
+                chromosome[i] = (available_vertex, chromosome[i][1 - j])
+                vertex_count[vertex] -= 1
+                vertex_count[available_vertex] = vertex_count.get(
+                    available_vertex, 0) + 1
+
+
+def find_available_vertex(chromosome, exclude_vertex):
+    for i in range(12):
+        if i != exclude_vertex and all(i not in edge for edge in chromosome):
+            return i
 
 
 # Realiza a operação de mutação em um cromossomo.
 # Escolhe aleatoriamente uma aresta no cromossomo e tenta trocar um de seus vértices por um vizinho não emparelhado.
 def mutation(chromosome, graph, max_attempts=10):
-    # cria uma copia do chromosome
+    # Cria uma cópia do cromossomo.
     mutated_chromosome = chromosome.copy()
-    # escolhe uma aresta aleatoria dele e busca seus vertices
-    mutated_edge_index = random.randint(0, len(mutated_chromosome) - 1)
-    vertex1, vertex2 = mutated_chromosome[mutated_edge_index]
 
-    # Cria uma lista de vizinhos não emparelhados do vertex1.
-    # Filtra os vizinhos com base no peso da aresta no grafo e se a aresta já está presente no cromossomo
-    non_paired_neighbors = [neighbor for neighbor in range(len(
-        graph)) if graph[vertex1][neighbor] > 0 and (neighbor, vertex1) not in mutated_chromosome]
+    # Escolhe aleatoriamente duas posições distintas no cromossomo.
+    position1, position2 = random.sample(range(len(mutated_chromosome)), 2)
 
-    # Verifica se existem vizinhos não emparelhados.
-    if non_paired_neighbors:
-        # Escolhe aleatoriamente um vizinho não emparelhado da lista de vizinhos não emparelhados.
-        vertex_to_unpair = random.choice(non_paired_neighbors)
-        # Atualiza a aresta escolhida no cromossomo para conectar vertex1 ao novo vizinho escolhido aleatoriamente.
-        mutated_chromosome[mutated_edge_index] = (vertex1, vertex_to_unpair)
-    else:
-        # Se não houver vizinhos não emparelhados, mantém a aresta existente, preservando o emparelhamento.
-        mutated_chromosome[mutated_edge_index] = (vertex1, vertex2)
+    # Obtém os vértices correspondentes às posições escolhidas.
+    vertex1a, vertex1b = mutated_chromosome[position1]
+    vertex2a, vertex2b = mutated_chromosome[position2]
 
-    # Inicializa o contador de tentativas para garantir que o loop de mutação não seja executado indefinidamente.
-    attempts = 0
-    # Inicia um loop que tenta realizar a mutação com um número máximo de tentativas (max_attempts).
-    while attempts < max_attempts:
-        # Escolhe aleatoriamente outro índice de aresta no cromossomo.
-        other_edge_index = random.randint(0, len(mutated_chromosome) - 1)
-        # Garante que o índice escolhido aleatoriamente não seja o mesmo da aresta original.
-        if other_edge_index != mutated_edge_index:
-            other_vertex1, other_vertex2 = mutated_chromosome[other_edge_index]
+    # Realiza a troca de vértices entre as arestas.
+    mutated_chromosome[position1] = (vertex1a, vertex2b)
+    mutated_chromosome[position2] = (vertex2a, vertex1b)
 
-            # Verifica se a troca proposta não gera arestas duplicadas no cromossomo e se a troca é possível no grafo original.
-            if (other_vertex2, vertex_to_unpair) not in mutated_chromosome and (vertex1, other_vertex2) not in mutated_chromosome and graph[other_vertex2][vertex_to_unpair] > 0:
-                # Realiza a troca nos vértices da aresta original.
-                mutated_chromosome[mutated_edge_index] = (
-                    vertex1, other_vertex2)
-                mutated_chromosome[other_edge_index] = (
-                    vertex_to_unpair, other_vertex1)
-                return mutated_chromosome
-
-        attempts += 1
-
-    return chromosome
+    return mutated_chromosome
 
 
 # Seleciona dois pais da população com base na probabilidade proporcional à sua aptidão.
@@ -137,9 +196,10 @@ if __name__ == "__main__":
     # Inicializa a variável que armazenará a aptidão do melhor cromossomo.
     final_best_fitness = None
 
+    start_time = time.time()
     for generation in range(generations):
         print("Geração %s | Aptidão: %s" %
-              (generation, fitness(population[0])))
+              (generation, 1 / fitness(max(population, key=fitness))))
 
         new_population = []
 
@@ -159,11 +219,27 @@ if __name__ == "__main__":
         best_chromosome = max(population, key=fitness)
         # Calcula a aptidão do melhor cromossomo.
         best_fitness = fitness(best_chromosome)
-        print('final', best_fitness, final_best_fitness)
-        if final_best_chromosome is None or best_fitness > final_best_fitness:
+        if final_best_chromosome is None or 1/best_fitness < 1/final_best_fitness:
             final_best_chromosome = best_chromosome
             final_best_fitness = best_fitness
+        print('Melhor aptidão encontrada', 1 / final_best_fitness)
 
+    end_time = time.time()
+    total_time = end_time - start_time
+    print("\nEstatística:")
+    if total_time >= 60:
+        minutes = total_time // 60
+        seconds = total_time % 60
+        print(
+            f"\nTempo total de execução: {minutes:.0f} minutos e {seconds:.2f} segundos")
+    else:
+        print(f"\nTempo total de execução: {total_time:.2f} segundos")
+
+    print("Quantidade da população: ", population_size)
+    print("Quantidade de gerações: ", generations)
     print("\nMelhor Emparelhamento Encontrado:")
-    print("Emparelhamento: ", final_best_chromosome)
-    print("Custo do Emparelhamento (inverso): ", -final_best_fitness)
+    print("Grafo Emparelhamento referente ao menor custo: ", final_best_chromosome)
+    print("Menor Custo do Emparelhamento Encontrado: ", 1 / final_best_fitness)
+    print("\nÚltimo Emparelhamento Encontrado:")
+    print("Último Grafo Emparelhamento: ", best_chromosome)
+    print("Último Custo do Emparelhamento: ", 1 / best_fitness)
