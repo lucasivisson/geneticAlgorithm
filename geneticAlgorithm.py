@@ -1,24 +1,44 @@
 import random
 import time
 
-num_vertices = 12  # Número de vértices no grafo.
+# num_vertices = 12  # Número de vértices no grafo.
+# graph = [
+#     [0, 255, 244, 286, 163, 119, 498, 264, 76, 585, 224, 297],
+#     [255, 0, 699, 757, 59, 451, 139, 146, 240, 369, 235, 44],
+#     [244, 699, 0, 197, 251, 350, 75, 136, 30, 112, 353, 17],
+#     [286, 757, 197, 0, 381, 76, 54, 69, 184, 34, 130, 569],
+#     [163, 59, 251, 381, 0, 311, 529, 166, 240, 263, 654, 184],
+#     [119, 451, 350, 76, 311, 0, 85, 50, 96, 42, 153, 107],
+#     [498, 139, 75, 54, 529, 85, 0, 145, 400, 404, 10, 182],
+#     [264, 146, 136, 69, 166, 50, 145, 0, 622, 53, 513, 402],
+#     [76, 240, 30, 184, 240, 96, 400, 622, 0, 132, 489, 338],
+#     [585, 369, 112, 34, 263, 42, 404, 53, 132, 0, 648, 575],
+#     [224, 235, 353, 130, 654, 153, 10, 513, 489, 648, 0, 547],
+#     [297, 44, 17, 569, 184, 107, 182, 402, 338, 575, 547, 0]
+# ]
+# Matriz de adjacência representando o grafo completo ponderado.
+
+num_vertices = 15  # Número de vértices no grafo.
 graph = [
-    [0, 255, 244, 286, 163, 119, 498, 264, 76, 585, 224, 297],
-    [255, 0, 699, 757, 59, 451, 139, 146, 240, 369, 235, 44],
-    [244, 699, 0, 197, 251, 350, 75, 136, 30, 112, 353, 17],
-    [286, 757, 197, 0, 381, 76, 54, 69, 184, 34, 130, 569],
-    [163, 59, 251, 381, 0, 311, 529, 166, 240, 263, 654, 184],
-    [119, 451, 350, 76, 311, 0, 85, 50, 96, 42, 153, 107],
-    [498, 139, 75, 54, 529, 85, 0, 145, 400, 404, 10, 182],
-    [264, 146, 136, 69, 166, 50, 145, 0, 622, 53, 513, 402],
-    [76, 240, 30, 184, 240, 96, 400, 622, 0, 132, 489, 338],
-    [585, 369, 112, 34, 263, 42, 404, 53, 132, 0, 648, 575],
-    [224, 235, 353, 130, 654, 153, 10, 513, 489, 648, 0, 547],
-    [297, 44, 17, 569, 184, 107, 182, 402, 338, 575, 547, 0]
-]  # Matriz de adjacência representando o grafo completo ponderado.
+    [0, 23, 44, 45, 54, 50, 48, 26, 24, 27, 28, 41, 43, 45, 47],
+    [23, 0, 30, 35, 44, 40, 30, 22, 47, 30, 29, 36, 20, 22, 37],
+    [44, 30, 0, 5, 14, 15, 15, 46, 38, 17, 16, 9, 25, 23, 12],
+    [45, 35, 5, 0, 9, 13, 17, 46, 39, 18, 17, 4, 20, 18, 10],
+    [54, 44, 14, 9, 0, 10, 20, 51, 48, 27, 26, 13, 29, 27, 13],
+    [50, 40, 15, 13, 10, 0, 10, 41, 44, 23, 22, 9, 20, 18, 3],
+    [45, 30, 15, 17, 20, 10, 0, 31, 39, 18, 17, 13, 10, 8, 7],
+    [26, 22, 46, 46, 51, 41, 31, 0, 25, 46, 46, 42, 30, 28, 38],
+    [24, 47, 38, 39, 48, 44, 42, 25, 0, 21, 22, 35, 40, 40, 41],
+    [27, 30, 17, 18, 27, 23, 21, 46, 21, 0, 1, 14, 19, 19, 20],
+    [28, 29, 16, 17, 26, 22, 20, 46, 22, 1, 0, 13, 20, 18, 19],
+    [41, 36, 9, 4, 13, 9, 13, 42, 35, 14, 13, 0, 16, 14, 6],
+    [43, 20, 25, 20, 29, 20, 10, 30, 40, 19, 20, 16, 0, 2, 17],
+    [45, 22, 23, 18, 27, 18, 8, 28, 40, 19, 18, 14, 2, 0, 15],
+    [47, 37, 12, 10, 13, 3, 7, 38, 41, 20, 19, 6, 17, 15, 0]
+]
 
 population_size = 100  # Tamanho da população na abordagem genética.
-generations = 1000  # Número máximo de gerações para o algoritmo genético.
+generations = 100000  # Número máximo de gerações para o algoritmo genético.
 # Um limite adicional para o número máximo de gerações.
 
 
@@ -69,15 +89,17 @@ def fitness(chromosome):
     # O custo é a soma dos pesos das arestas no emparelhamento.
     for edge in chromosome:
         vertex1, vertex2 = edge
-        # Como o algoritmo busca um emparelhamento mínimo, o custo é negativo.
         cost += graph[vertex1][vertex2]
 
+    # Como o algoritmo busca um emparelhamento mínimo, o custo é o inverso.
     return 1 / cost
 
 
 # Realiza a operação de cruzamento (crossover) entre dois cromossomos.
 def crossover(chromosome1, chromosome2):
+    # Um ponto de corte (point) é escolhido aleatoriamente
     point = random.randint(1, len(chromosome1) - 1)
+    # A parte dos cromossomos a partir do corte são trocados para formar dois novos cromossomos.
     new_chromosome1 = chromosome1[:point] + chromosome2[point:]
     new_chromosome2 = chromosome2[:point] + chromosome1[point:]
 
@@ -87,11 +109,14 @@ def crossover(chromosome1, chromosome2):
     return new_chromosome1, new_chromosome2
 
 
+# troca um vértice por outro em um cromossomo e no cromossomo correspondente de outra lista.
 def swap_repeated_vertices(chromosome1, chromosome2):
+    # Usa a função find_repeated_vertices para encontrar vértices duplicados em cada cromossomo.
     repeated_vertices_1 = find_repeated_vertices(chromosome1)
     repeated_vertices_2 = find_repeated_vertices(chromosome2)
 
     for v1, v2 in zip(repeated_vertices_1, repeated_vertices_2):
+        # Em seguida, utiliza a função swap_vertices para efetuar a troca de vértices duplicados.
         swap_vertices(chromosome1, v1, chromosome2, v2)
 
     # Após a troca, verifique novamente e resolva possíveis duplicatas
@@ -101,13 +126,16 @@ def swap_repeated_vertices(chromosome1, chromosome2):
     return chromosome1, chromosome2
 
 
+#  identifica e retorna vértices duplicados em um cromossomo.
 def find_repeated_vertices(chromosome):
+    # Usa um conjunto visited_vertices para rastrear vértices já visitados.
     visited_vertices = set()
     repeated_vertices = []
 
     for edge in chromosome:
         for vertex in edge:
             if vertex in visited_vertices:
+                # Se um vértice já estiver no conjunto, é adicionado à lista de repeated_vertices.
                 repeated_vertices.append(vertex)
             else:
                 visited_vertices.add(vertex)
@@ -115,7 +143,9 @@ def find_repeated_vertices(chromosome):
     return repeated_vertices
 
 
+# troca um vértice por outro em um cromossomo e no cromossomo correspondente de outra lista.
 def swap_vertices(chromosome, vertex1, other_chromosome, vertex2):
+    # Itera sobre cada aresta ((v1, v2)) do cromossomo e troca vertex1 por vertex2 e vice-versa, se necessário.
     for i in range(len(chromosome)):
         if chromosome[i][0] == vertex1:
             chromosome[i] = (vertex2, chromosome[i][1])
@@ -129,7 +159,9 @@ def swap_vertices(chromosome, vertex1, other_chromosome, vertex2):
             other_chromosome[i] = (other_chromosome[i][0], vertex1)
 
 
+# trata de resolver duplicatas de vértices em um cromossomo.
 def resolve_duplicate_vertices(chromosome):
+    # Usa um dicionário vertex_count para contar quantas vezes cada vértice aparece no cromossomo.
     vertex_count = {}
     for edge in chromosome:
         for vertex in edge:
@@ -138,19 +170,23 @@ def resolve_duplicate_vertices(chromosome):
             else:
                 vertex_count[vertex] = 1
 
+    # Itera sobre o cromossomo e, se um vértice tiver mais de uma ocorrência, chama find_available_vertex para encontrar um vértice disponível para substituição.
     for i in range(len(chromosome)):
         for j in range(2):
             vertex = chromosome[i][j]
             if vertex_count[vertex] > 1:
                 available_vertex = find_available_vertex(chromosome, vertex)
+                # Substitui o vértice duplicado pela versão disponível e atualiza as contagens no dicionário
                 chromosome[i] = (available_vertex, chromosome[i][1 - j])
                 vertex_count[vertex] -= 1
                 vertex_count[available_vertex] = vertex_count.get(
                     available_vertex, 0) + 1
 
 
+#  procura e retorna um vértice disponível para substituir um vértice duplicado.
 def find_available_vertex(chromosome, exclude_vertex):
-    for i in range(12):
+    # Itera sobre todos os vértices possíveis (range(num_vertices)) e verifica se o vértice não está presente em nenhuma aresta do cromossomo.
+    for i in range(num_vertices):
         if i != exclude_vertex and all(i not in edge for edge in chromosome):
             return i
 
