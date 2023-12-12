@@ -2,7 +2,7 @@ import random
 import time
 from Graphs import Grafo
 
-instancia = Grafo("K12.txt")
+instancia = Grafo("Tsp58.txt")
 
 graph, num_vertices = instancia.run()
 
@@ -43,7 +43,7 @@ graph, num_vertices = instancia.run()
 # ]
 
 population_size = 100  # Tamanho da população na abordagem genética.
-generations = 100000  # Número máximo de gerações para o algoritmo genético.
+generations = 20000  # Número máximo de gerações para o algoritmo genético.
 # Um limite adicional para o número máximo de gerações.
 
 
@@ -238,6 +238,9 @@ if __name__ == "__main__":
     final_best_fitness = None
 
     start_time = time.time()
+    mutation_rate = 0.1  # Taxa de mutação
+    crossover_rate = 0.3  # Taxa de crossover
+
     for generation in range(generations):
         print("Geração %s | Aptidão: %s" %
               (generation, 1 / fitness(max(population, key=fitness))))
@@ -248,15 +251,28 @@ if __name__ == "__main__":
         for _ in range(population_size // 2):
             # Seleciona dois pais da população usando o método de "roleta viciada".
             parent1, parent2 = select_parents(population)
-            # Realiza o cruzamento para gerar dois filhos a partir dos pais selecionados.
-            child1, child2 = crossover(parent1, parent2)
-            # Adiciona os descendentes mutados à nova população.
-            new_population.extend(
-                [mutation(child1, graph), mutation(child2, graph)])
+
+            # Decide se deve aplicar crossover sendo que vai aplicar no máximo a 30% da população
+            if random.random() < crossover_rate:
+                # Realiza o cruzamento para gerar dois filhos a partir dos pais selecionados.
+                child1, child2 = crossover(parent1, parent2)
+            else:
+                # Se não ocorrer crossover, os filhos são cópias dos pais.
+                child1, child2 = parent1.copy(), parent2.copy()
+
+            # Decide se deve aplicar mutação nos filhos sendo que vai aplicar no máximo a 10% da população
+            if random.random() < mutation_rate:
+                child1 = mutation(child1, graph)
+            if random.random() < mutation_rate:
+                child2 = mutation(child2, graph)
+
+            # Adiciona os descendentes à nova população.
+            new_population.extend([child1, child2])
 
         # Atualiza a população para a nova população gerada.
         population = new_population
-        #  Encontra o cromossomo com a maior aptidão na população atual.
+
+        # Encontra o cromossomo com a maior aptidão na população atual.
         best_chromosome = max(population, key=fitness)
         # Calcula a aptidão do melhor cromossomo.
         best_fitness = fitness(best_chromosome)
