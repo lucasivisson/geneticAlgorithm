@@ -2,7 +2,7 @@ import random
 import time
 from Graphs import Grafo
 
-instancia = Grafo("K15.txt")
+instancia = Grafo("Groestchel_442.txt")
 
 graph, num_vertices = instancia.run()
 
@@ -85,9 +85,8 @@ def random_chromosome(graph):
 def create_population():
     return [random_chromosome(graph) for _ in range(population_size)]
 
+
 # Calcula a aptidão (custo) de um cromossomo.
-
-
 def fitness(chromosome):
     cost = 0
 

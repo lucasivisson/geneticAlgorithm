@@ -1,3 +1,6 @@
+import math
+
+
 class Grafo:
     def __init__(self, filename):
         self.vertices = 0
@@ -13,7 +16,45 @@ class Grafo:
             tipoArquivo = file_object.readline().strip()
             self.vertices = int(file_object.readline())
 
-            if (tipoArquivo == 'Arestas'):
+            if (tipoArquivo == "Coordenadas"):
+                print("yes")
+                lines = file_object.readlines()
+
+                def calculate_distance(coord1, coord2):
+                    x1, y1 = coord1
+                    x2, y2 = coord2
+                    return ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+
+                # Extract coordinates from each line
+                coordinates = []
+                self.matrizAdj = [
+                    [0 for i in range(self.vertices)] for j in range(self.vertices)]
+
+                for line in lines:
+
+                    parts = line.strip().split()
+
+                    if len(parts) <= 3:
+                        coordinates.append((float(parts[0]), float(parts[1])))
+
+                    else:
+                        print(f"Skipping invalid line: {line}")
+
+                # Calculate distances between nodes
+                num_nodes = len(coordinates)
+                # print(num_nodes)
+                edges = []
+                # print(coordinates)
+                for i in range(num_nodes):
+                    for j in range(i + 1, num_nodes):
+                        distance = calculate_distance(
+                            coordinates[i], coordinates[j])
+                        edges.append((i, j, distance))
+                        # print(distance)
+                        self.matrizAdj[i][j] = distance
+                        self.matrizAdj[j][i] = distance
+
+            elif (tipoArquivo == 'Arestas'):
                 matrizAux = [[0 for i in range(self.vertices)]
                              for j in range(self.vertices)]
                 for row in file_object:
@@ -44,14 +85,6 @@ class Grafo:
 
                 for row in matrizAux:
                     self.matrizAdj.append(row)
-        # print(self.matrizAdj)
-
-    def createFile(self):
-
-        with open(self.file_name + "_matrizAdj.txt", 'w') as file_object:
-
-            for row in self.matrizAdj:
-                file_object.write(str(row))
 
     def getMatrizAdj(self):
         return self.matrizAdj
