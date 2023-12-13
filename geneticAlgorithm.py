@@ -2,7 +2,7 @@ import random
 import time
 from Graphs import Grafo
 
-instancia = Grafo("Tsp58.txt")
+instancia = Grafo("K15.txt")
 
 graph, num_vertices = instancia.run()
 
@@ -43,7 +43,7 @@ graph, num_vertices = instancia.run()
 # ]
 
 population_size = 100  # Tamanho da população na abordagem genética.
-generations = 20000  # Número máximo de gerações para o algoritmo genético.
+generations = 10000  # Número máximo de gerações para o algoritmo genético.
 # Um limite adicional para o número máximo de gerações.
 
 
@@ -276,10 +276,6 @@ if __name__ == "__main__":
         best_chromosome = max(population, key=fitness)
         # Calcula a aptidão do melhor cromossomo.
         best_fitness = fitness(best_chromosome)
-        if final_best_chromosome is None or 1/best_fitness < 1/final_best_fitness:
-            final_best_chromosome = best_chromosome
-            final_best_fitness = best_fitness
-        print('Melhor aptidão encontrada', 1 / final_best_fitness)
 
     end_time = time.time()
     total_time = end_time - start_time
@@ -294,9 +290,6 @@ if __name__ == "__main__":
 
     print("Quantidade da população: ", population_size)
     print("Quantidade de gerações: ", generations)
-    print("\nMelhor Emparelhamento Encontrado:")
-    print("Grafo Emparelhamento referente ao menor custo: ", final_best_chromosome)
-    print("Menor Custo do Emparelhamento Encontrado: ", 1 / final_best_fitness)
     print("\nÚltimo Emparelhamento Encontrado:")
     print("Último Grafo Emparelhamento: ", best_chromosome)
     print("Último Custo do Emparelhamento: ", 1 / best_fitness)
